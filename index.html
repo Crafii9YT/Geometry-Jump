@@ -2,64 +2,50 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>GeoDash Pro - Editor Update</title>
+    <title>GeoDash Stable Version</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@900&display=swap');
         
-        /* --- VISUALS & POLISH --- */
-        body {
-            margin: 0; overflow: hidden; background: #111;
-            font-family: 'Roboto', sans-serif; color: white; user-select: none;
-        }
+        body { margin: 0; overflow: hidden; background: #000; font-family: 'Roboto', sans-serif; color: white; user-select: none; }
+        
         #game-container {
             position: relative; width: 100vw; height: 100vh;
-            background: linear-gradient(to bottom, #1a2a6c, #b21f1f, #fdbb2d); /* Deep Space Gradient */
+            background: linear-gradient(to bottom, #200122, #6f0000);
             display: flex; justify-content: center; align-items: center;
         }
-        canvas { display: block; box-shadow: 0 0 30px rgba(0,0,0,0.8); border: 2px solid #fff; }
-        
-        /* UI LAYOUT */
-        #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
+
+        canvas { display: block; border: 2px solid #555; box-shadow: 0 0 20px #000; background: #111; }
+
+        /* UI Styles */
         .screen {
-            display: none; width: 100%; height: 100%;
-            flex-direction: column; justify-content: center; align-items: center;
-            background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(5px);
-            pointer-events: auto;
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            display: none; flex-direction: column; justify-content: center; align-items: center;
+            background: rgba(0, 0, 0, 0.7); z-index: 10;
         }
         .active { display: flex; }
-
-        /* BUTTONS STYLE */
-        .btn {
-            border: 3px solid white; padding: 15px 40px; margin: 10px;
-            font-size: 1.2rem; font-weight: 900; text-transform: uppercase;
-            cursor: pointer; box-shadow: 0 6px 0 rgba(0,0,0,0.5);
-            transition: all 0.1s; text-shadow: 1px 1px 2px black;
+        
+        h1 { font-size: 3rem; margin-bottom: 20px; text-shadow: 3px 3px 0 #000; color: #ffcc00; }
+        
+        button {
+            padding: 15px 30px; margin: 10px; font-size: 1.5rem; font-weight: bold;
+            border: 3px solid white; background: #222; color: white; cursor: pointer;
+            text-transform: uppercase;
         }
-        .btn:active { transform: translateY(6px); box-shadow: 0 0 0 rgba(0,0,0,0.5); }
-        .btn-play {
-            width: 120px; height: 120px; border-radius: 50%; background: url('https://upload.wikimedia.org/wikipedia/commons/thumb/3/3f/Placeholder_view_vector.svg/681px-Placeholder_view_vector.svg.png'); /* Fallback */
-            background: #00FF00; font-size: 3rem; display: flex; justify-content: center; align-items: center;
-            border: 5px solid white;
-        }
+        button:hover { background: #444; transform: scale(1.05); }
+        button:active { transform: scale(0.95); }
 
-        /* EDITOR UI */
+        .btn-green { background: #00aa00; }
+        .btn-orange { background: #ffaa00; }
+        .btn-red { background: #aa0000; }
+
+        /* Editor Toolbar */
         #editor-ui {
             position: absolute; bottom: 0; left: 0; width: 100%; height: 80px;
-            background: rgba(0,0,0,0.8); border-top: 2px solid white;
-            display: none; align-items: center; justify-content: center; gap: 20px; pointer-events: auto;
+            background: #222; border-top: 2px solid white; display: none;
+            justify-content: center; align-items: center; gap: 10px; z-index: 20;
         }
-        .editor-tool {
-            width: 50px; height: 50px; border: 2px solid #777; cursor: pointer;
-            display: flex; justify-content: center; align-items: center; background: #222;
-        }
-        .editor-tool.selected { border-color: #00FF00; background: #333; }
-
-        /* HUD */
-        #hud { position: absolute; top: 0; left: 0; width: 100%; padding: 20px; box-sizing: border-box; display: none; }
-        #progress-container { width: 60%; margin: 0 auto; height: 15px; border: 2px solid white; background: rgba(0,0,0,0.5); border-radius: 10px; overflow: hidden; }
-        #progress-fill { width: 0%; height: 100%; background: #00FF00; transition: width 0.1s linear; }
-
-        h1, h2 { text-shadow: 3px 3px 0 #000; letter-spacing: 2px; }
+        .tool { width: 50px; height: 50px; border: 2px solid gray; cursor: pointer; display:flex; justify-content:center; align-items:center; }
+        .tool.selected { border-color: lime; background: #333; }
     </style>
 </head>
 <body>
@@ -67,564 +53,336 @@
 <div id="game-container">
     <canvas id="gameCanvas"></canvas>
 
-    <div id="ui-layer">
-        <div id="menu-main" class="screen active">
-            <h1 style="font-size: 4rem; margin-bottom: 10px;">GEOMETRY CLONE</h1>
-            <div style="display: flex; align-items: center; gap: 50px;">
-                <button class="btn" style="background: #00AAFF;" onclick="alert('Icons coming soon!')">Skin</button>
-                <button class="btn btn-play" onclick="showScreen('menu-levels')">▶</button>
-                <button class="btn" style="background: #FFAA00;" onclick="openEditor()">Editor</button>
-            </div>
-        </div>
+    <div id="menu" class="screen active">
+        <h1>GEOMETRY DASH CLONE</h1>
+        <button class="btn-green" onclick="startGame()">▶ PLAY</button>
+        <button class="btn-orange" onclick="openEditor()">🛠 EDITOR</button>
+        <p style="margin-top:20px; color:#aaa; font-size: 0.8rem;">(Audio requires 'stereomadness.mp3' in folder)</p>
+    </div>
 
-        <div id="menu-levels" class="screen">
-            <h2>Select Level</h2>
-            <div id="level-card" style="background: #222; padding: 30px; border: 3px solid #FFF; width: 400px; text-align: center;">
-                <h2 style="color:yellow; margin:0;">STEREO MADNESS</h2>
-                <p>Difficulty: Easy | Length: Long</p>
-                <div style="display:flex; justify-content:center; gap: 10px;">
-                    <button class="btn" onclick="startOfficialLevel()">PLAY</button>
-                </div>
-            </div>
-            <button class="btn" style="background:#FF4444; margin-top:20px;" onclick="showScreen('menu-main')">BACK</button>
-        </div>
-
-        <div id="hud">
-            <div style="display: flex; justify-content: space-between; color: white; font-weight: bold; margin-bottom: 5px;">
-                <span onclick="pauseGame()" style="cursor:pointer">|| PAUSE</span>
-                <span id="pct-display">0%</span>
-            </div>
-            <div id="progress-container"><div id="progress-fill"></div></div>
-        </div>
-
-        <div id="editor-ui">
-            <div class="editor-tool selected" id="tool-block" onclick="selectTool(1)">◼</div>
-            <div class="editor-tool" id="tool-spike" onclick="selectTool(2)">▲</div>
-            <div class="editor-tool" id="tool-eraser" onclick="selectTool(0)">Eraser</div>
-            <div style="width: 2px; height: 40px; background: #555;"></div>
-            <button class="btn" style="padding: 5px 15px; font-size: 1rem; background: #00FF00;" onclick="testLevel()">TEST</button>
-            <button class="btn" style="padding: 5px 15px; font-size: 1rem; background: #FF4444;" onclick="exitEditor()">EXIT</button>
-        </div>
+    <div id="editor-ui">
+        <div class="tool selected" onclick="setTool(1)" id="t1" style="color:lime">■</div>
+        <div class="tool" onclick="setTool(2)" id="t2" style="color:red">▲</div>
+        <div class="tool" onclick="setTool(0)" id="t0">Eraser</div>
+        <button onclick="testLevel()" style="font-size:1rem; padding:5px 10px;">TEST</button>
+        <button onclick="backToMenu()" class="btn-red" style="font-size:1rem; padding:5px 10px;">EXIT</button>
     </div>
 </div>
 
 <script>
-    /** --- ENGINE CONFIGURATION --- */
+    // --- SETUP ---
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
     
-    // Core Constants
-    const TILE_SIZE = 50;
-    const GRAVITY = 0.65;
-    const JUMP_FORCE = -11.5;
-    const SPEED = 6.5;
-    const FLOOR_Y_OFFSET = 100;
-
-    let canvasWidth, canvasHeight, floorY;
-
-    // Audio System
-    const musicPlayer = new Audio();
-    let musicStarted = false;
-
-    // Game State
+    // Globale Variablen
+    let w, h;
     let state = 'MENU'; // MENU, GAME, EDITOR
-    let isEditorTest = false;
     let frameId;
     
-    // Camera
-    let cameraX = 0;
+    // Physik Konstanten
+    const GRAVITY = 0.7;
+    const JUMP = -12;
+    const SPEED = 7;
+    const TILE = 50;
+    const FLOOR_OFFSET = 100;
 
-    // Player Object
-    let player = {
-        x: 0, y: 0, w: 40, h: 40,
-        dy: 0, rotation: 0,
-        grounded: false, dead: false,
-        color: '#00FFFF', secondary: '#FFFF00'
-    };
-
-    // Particles
-    let particles = [];
-
-    // Level Data
-    // Array of objects: {x: gridX, y: gridY, type: 1(block)|2(spike)}
-    let currentLevelData = [];
-    let editorLevelData = []; // User created level
+    // Spieler
+    let p = { x: 0, y: 0, dy: 0, w: 40, h: 40, rot: 0, grounded: false, dead: false };
     
-    // Editor Tools
-    let selectedTool = 1; // 1 = Block, 2 = Spike, 0 = Eraser
+    // Kamera
+    let camX = 0;
+    
+    // Level Daten
+    let levelData = [];
+    let editorData = [];
+    
+    // Audio (Fehlertolerant)
+    let audio = new Audio();
+    let audioExists = false;
 
+    // Initialisierung
     function resize() {
-        canvasWidth = window.innerWidth;
-        canvasHeight = window.innerHeight;
-        canvas.width = canvasWidth;
-        canvas.height = canvasHeight;
-        floorY = canvasHeight - FLOOR_Y_OFFSET;
+        w = window.innerWidth;
+        h = window.innerHeight;
+        canvas.width = w;
+        canvas.height = h;
     }
     window.addEventListener('resize', resize);
     resize();
 
-    /** --- LEVEL DESIGN (OFFICIAL) --- */
-    // Helper to create level from string map for better readability
-    // . = empty, # = block, ^ = spike
-    function parseLevelMap(mapString) {
-        let data = [];
-        let lines = mapString.trim().split('\n');
-        // Start generating after some empty space
-        let startOffset = 10; 
-        
-        // Reverse lines so bottom line is index 0 in visual logic
-        lines.reverse();
-
-        for (let y = 0; y < lines.length; y++) {
-            let line = lines[y];
-            for (let x = 0; x < line.length; x++) {
-                let char = line[x];
-                let type = 0;
-                if (char === '#') type = 1;
-                if (char === '^') type = 2;
-                
-                if (type !== 0) {
-                    // y is counted from floor up
-                    data.push({x: x + startOffset, y: y + 1, type: type});
-                }
-            }
-        }
-        // Add floor limit
-        data.levelLength = lines[0].length + startOffset + 10;
-        return data;
+    // Versuche Audio zu laden, aber crashe nicht wenn es fehlt
+    try {
+        audio.src = 'stereomadness.mp3';
+        audio.addEventListener('canplaythrough', () => { audioExists = true; });
+        audio.addEventListener('error', () => { console.log("Audio file not found - playing silent."); audioExists = false; });
+    } catch(e) {
+        console.log("Audio Error:", e);
     }
 
-    // A simpler version of Stereo Madness layout (Readable Map)
-    const stereoMadnessMap = `
-....................................................................................................
-...................................................................#................................
-..................................................................##................................
-............................#.#..................................###.......#...#....................
-...........................#####................................####.......#...#....................
-........^...^........^....#######...^..^.....^^^.......^...^...#####...^...#...#...^..^..^..........
-`; 
-// Hinweis: Das Level ist horizontal scrollend. Die Map oben ist nur ein winziger Ausschnitt.
-// Damit es wirklich "Lang" ist, generieren wir es prozedural oder nutzen JSON. 
-// Für dieses Script nutzen wir eine prozedurale Erweiterung für "Endlos" Gefühl bis zum Ziel.
-
-    function generateOfficialLevel() {
-        let base = parseLevelMap(stereoMadnessMap);
-        let len = base.levelLength;
-        // Extend level for length 
-        for(let i=0; i<50; i++) {
-            base.push({x: len + 10 + (i*15), y: 1, type: 2}); // Some rhythmic spikes
-            base.push({x: len + 15 + (i*15), y: 1, type: 1});
-            base.push({x: len + 16 + (i*15), y: 1, type: 1});
-        }
-        base.maxX = (len + (50*15)) * TILE_SIZE;
-        return base;
-    }
-
-    /** --- CORE FUNCTIONS --- */
-
-    function showScreen(id) {
-        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-        document.getElementById(id).classList.add('active');
-        document.getElementById('hud').style.display = 'none';
-        document.getElementById('editor-ui').style.display = 'none';
-    }
-
-    function initAudio(songFile) {
-        musicPlayer.src = songFile;
-        musicPlayer.volume = 0.5;
-        musicPlayer.load();
-    }
-
-    function startOfficialLevel() {
-        initAudio('stereomadness.mp3');
-        currentLevelData = generateOfficialLevel();
-        isEditorTest = false;
-        startGame();
-    }
-
-    function startGame() {
-        showScreen(''); // Hide menus
-        document.getElementById('hud').style.display = 'block';
-        
-        // Reset Player
-        player.x = 0;
-        player.y = 0; // Relative to floor
-        player.dy = 0;
-        player.rotation = 0;
-        player.dead = false;
-        particles = [];
-        cameraX = 0;
-
-        state = 'GAME';
-        
-        // Try play music
-        musicPlayer.currentTime = 0;
-        musicPlayer.play().catch(e => console.log("Click interaction needed for audio"));
-        
-        loop();
-    }
-
-    function resetGame() {
-        player.dead = false;
-        player.x = 0;
-        player.y = 0;
-        player.dy = 0;
-        player.rotation = 0;
-        cameraX = 0;
-        musicPlayer.currentTime = 0;
-        if(state === 'GAME') musicPlayer.play();
-    }
-
-    /** --- EDITOR LOGIC --- */
-
-    function openEditor() {
-        state = 'EDITOR';
-        showScreen('');
-        document.getElementById('editor-ui').style.display = 'flex';
-        cameraX = 0;
-        // If empty, init
-        if(editorLevelData.length === 0) editorLevelData = [];
-        loop();
-    }
-
-    function selectTool(t) {
-        selectedTool = t;
-        document.querySelectorAll('.editor-tool').forEach(el => el.classList.remove('selected'));
-        if(t===1) document.getElementById('tool-block').classList.add('selected');
-        if(t===2) document.getElementById('tool-spike').classList.add('selected');
-        if(t===0) document.getElementById('tool-eraser').classList.add('selected');
-    }
-
-    function testLevel() {
-        currentLevelData = JSON.parse(JSON.stringify(editorLevelData)); // Deep copy
-        // Calculate max X for progress bar
-        let max = 0;
-        currentLevelData.forEach(b => { if(b.x > max) max = b.x; });
-        currentLevelData.maxX = (max + 20) * TILE_SIZE;
-        
-        isEditorTest = true;
-        startGame();
-        musicPlayer.pause(); // No music in editor test for now
-    }
-
-    function exitEditor() {
-        state = 'MENU';
-        showScreen('menu-main');
-    }
-
-    // Editor Input
-    canvas.addEventListener('mousedown', (e) => {
-        if (state !== 'EDITOR') return;
-        
-        const rect = canvas.getBoundingClientRect();
-        const mouseX = e.clientX - rect.left + cameraX;
-        const mouseY = e.clientY - rect.top;
-
-        // Convert to Grid
-        // Floor is at canvasHeight - FLOOR_Y_OFFSET
-        // y=1 is the block ON the floor.
-        const floorLevel = canvasHeight - FLOOR_Y_OFFSET;
-        
-        // Grid X
-        const gx = Math.floor(mouseX / TILE_SIZE);
-        
-        // Grid Y (1 is first block above floor)
-        // mouseY = floorLevel - (gy * TILE_SIZE)
-        // floorLevel - mouseY = gy * TILE_SIZE
-        const gy = Math.ceil((floorLevel - mouseY) / TILE_SIZE);
-
-        if (gy < 1) return; // Can't build below floor
-
-        // Remove existing at this pos
-        editorLevelData = editorLevelData.filter(b => !(b.x === gx && b.y === gy));
-
-        // Add new
-        if (selectedTool !== 0) {
-            editorLevelData.push({x: gx, y: gy, type: selectedTool});
-        }
-    });
-
-    /** --- GAME PHYSICS & LOGIC --- */
-
-    function updatePhysics() {
-        if (player.dead) return;
-
-        // Move Player right
-        player.x += SPEED;
-        
-        // Camera Follow
-        // Keep player at 30% of screen
-        cameraX = player.x - (canvasWidth * 0.3);
-        if(cameraX < 0) cameraX = 0;
-
-        // Input / Jump Logic
-        // We handle input via event listeners setting a flag, but for simplicity:
-        // Input is handled in event listeners directly applying velocity if grounded.
-        
-        // Gravity
-        player.dy += GRAVITY;
-        player.y -= player.dy; // y is distance FROM floor (positive is up)
-
-        // Floor Collision
-        if (player.y <= 0) {
-            player.y = 0;
-            player.dy = 0;
-            player.grounded = true;
-            // Snap rotation
-            player.rotation = Math.round(player.rotation / 90) * 90;
-        } else {
-            player.grounded = false;
-            player.rotation += 6; // Rotate while jumping
-        }
-
-        // Object Collision
-        checkCollisions();
-
-        // Progress
-        if(currentLevelData.maxX) {
-            let pct = Math.min(100, Math.floor((player.x / currentLevelData.maxX) * 100));
-            document.getElementById('progress-fill').style.width = pct + '%';
-            document.getElementById('pct-display').innerText = pct + '%';
-            
-            if (player.x > currentLevelData.maxX) {
-                // Win
-                alert("LEVEL COMPLETE!");
-                if(isEditorTest) openEditor();
-                else showScreen('menu-main');
-                state = 'MENU';
-                musicPlayer.pause();
-            }
-        }
-    }
-
-    function checkCollisions() {
-        // Player Hitbox (smaller than visual)
-        const px = player.x + 10;
-        const py = player.y + 10; 
-        const pw = player.w - 20;
-        const ph = player.h - 20;
-
-        // Iterate visible blocks
-        // Optimization: only check blocks near player X
-        const playerGridX = Math.floor(player.x / TILE_SIZE);
-        
-        for (let obj of currentLevelData) {
-            if (obj.x < playerGridX - 5 || obj.x > playerGridX + 5) continue;
-
-            // Object Coords (Visual)
-            // obj.y is grid units up from floor.
-            // visual Y is calculated in draw loop, but here we need logical Y
-            // Logical Y of block bottom = (obj.y - 1) * TILE_SIZE
-            // Logical Y of block top = obj.y * TILE_SIZE
-            
-            const objLeft = obj.x * TILE_SIZE;
-            const objRight = objLeft + TILE_SIZE;
-            const objBottom = (obj.y - 1) * TILE_SIZE;
-            const objTop = objBottom + TILE_SIZE;
-
-            // SPIKE (Type 2) - Hitbox is smaller triangle
-            if (obj.type === 2) {
-                 // Simple rect collision for spike center
-                 const spikePad = 15;
-                 if (px < objRight - spikePad && px + pw > objLeft + spikePad &&
-                     player.y < objTop - spikePad && player.y + ph > objBottom) {
-                     die();
-                 }
-            }
-            // BLOCK (Type 1)
-            else if (obj.type === 1) {
-                // AABB Collision
-                if (px < objRight && px + pw > objLeft &&
-                    player.y < objTop && player.y + ph > objBottom) {
-                    
-                    // Resolve Collision
-                    // If hitting from top
-                    if (player.dy < 0 && (player.y - player.dy) >= objTop) {
-                        player.y = objTop;
-                        player.dy = 0;
-                        player.grounded = true;
-                        player.rotation = Math.round(player.rotation / 90) * 90;
-                    } 
-                    // If hitting from side (Death)
-                    else {
-                        die();
-                    }
-                }
-            }
-        }
-    }
-
-    function die() {
-        if(player.dead) return;
-        player.dead = true;
-        // Explosion particles
-        for(let i=0; i<20; i++) {
-            particles.push({
-                x: player.x + player.w/2,
-                y: player.y + player.h/2,
-                vx: (Math.random() - 0.5) * 10,
-                vy: (Math.random() - 0.5) * 10,
-                life: 30,
-                color: player.color
-            });
-        }
-        setTimeout(resetGame, 800);
-    }
-
-    function inputJump() {
-        if (state === 'GAME' && player.grounded && !player.dead) {
-            player.dy = JUMP_FORCE;
-            player.grounded = false;
-        }
-    }
-
-    // Input Listeners
-    window.addEventListener('keydown', (e) => {
-        if(e.code === 'Space' || e.code === 'ArrowUp') inputJump();
-        if(e.code === 'KeyE') openEditor(); // Cheat shortcut
-    });
-    window.addEventListener('mousedown', (e) => {
-        if(state === 'GAME') inputJump();
-    });
-
-    /** --- DRAWING --- */
-
-    function draw() {
-        // Clear
-        ctx.fillStyle = '#1a2a6c'; // Background fallback
-        ctx.clearRect(0, 0, canvasWidth, canvasHeight);
-
-        // Calculate visual offsets
-        // floorY is the screen Y coordinate of the floor line
-        
-        // Draw Floor
-        ctx.fillStyle = '#000';
-        ctx.fillRect(0, floorY, canvasWidth, canvasHeight - floorY);
-        ctx.strokeStyle = '#FFF';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(0, floorY);
-        ctx.lineTo(canvasWidth, floorY);
-        ctx.stroke();
-
-        // Draw Line inside floor (Grid effect)
-        ctx.strokeStyle = '#333';
-        let floorOffsetX = -(cameraX % TILE_SIZE);
-        for(let i=floorOffsetX; i<canvasWidth; i+=TILE_SIZE) {
-            ctx.strokeRect(i, floorY, TILE_SIZE, TILE_SIZE);
-        }
-
-        // --- DRAW WORLD OBJECTS ---
-        let dataToDraw = (state === 'EDITOR') ? editorLevelData : currentLevelData;
-
-        // Scroll Editor
-        if(state === 'EDITOR') {
-            if(keys['ArrowRight']) cameraX += 10;
-            if(keys['ArrowLeft']) cameraX -= 10;
-            if(cameraX < 0) cameraX = 0;
-        }
-
-        dataToDraw.forEach(obj => {
-            let screenX = (obj.x * TILE_SIZE) - cameraX;
-            let screenY = floorY - (obj.y * TILE_SIZE);
-            
-            // Render optimization
-            if(screenX < -50 || screenX > canvasWidth) return;
-
-            if (obj.type === 1) { // Block
-                ctx.fillStyle = '#000'; // Block body
-                ctx.fillRect(screenX, screenY, TILE_SIZE, TILE_SIZE);
-                ctx.strokeStyle = '#00FF00'; // Neon border
-                ctx.lineWidth = 2;
-                ctx.strokeRect(screenX, screenY, TILE_SIZE, TILE_SIZE);
-                // Detail
-                ctx.fillStyle = '#004400';
-                ctx.fillRect(screenX+10, screenY+10, TILE_SIZE-20, TILE_SIZE-20);
-            } else if (obj.type === 2) { // Spike
-                ctx.fillStyle = '#000';
-                ctx.beginPath();
-                ctx.moveTo(screenX, screenY + TILE_SIZE);
-                ctx.lineTo(screenX + TILE_SIZE/2, screenY);
-                ctx.lineTo(screenX + TILE_SIZE, screenY + TILE_SIZE);
-                ctx.fill();
-                ctx.strokeStyle = '#FF0000';
-                ctx.lineWidth = 2;
-                ctx.stroke();
-                // Inner Detail
-                ctx.beginPath();
-                ctx.moveTo(screenX + 10, screenY + TILE_SIZE);
-                ctx.lineTo(screenX + TILE_SIZE/2, screenY + 15);
-                ctx.lineTo(screenX + TILE_SIZE - 10, screenY + TILE_SIZE);
-                ctx.stroke();
-            }
-        });
-
-        // --- DRAW PLAYER ---
-        if (!player.dead && state !== 'EDITOR') {
-            // Visual Player Position
-            // Player logical Y is distance FROM floor.
-            // Screen Y = floorY - player.y - player.height
-            let pScreenX = player.x - cameraX;
-            let pScreenY = floorY - player.y - player.h;
-
-            ctx.save();
-            ctx.translate(pScreenX + player.w/2, pScreenY + player.h/2);
-            ctx.rotate(player.rotation * Math.PI / 180);
-            
-            // Icon Body
-            ctx.fillStyle = player.color;
-            ctx.fillRect(-player.w/2, -player.w/2, player.w, player.h);
-            
-            // Icon Face (Simple GD Style)
-            ctx.fillStyle = player.secondary;
-            ctx.fillRect(-10, -10, 20, 20);
-            ctx.strokeStyle = 'black';
-            ctx.lineWidth = 2;
-            ctx.strokeRect(-player.w/2, -player.w/2, player.w, player.h);
-            
-            ctx.restore();
-        }
-
-        // --- PARTICLES ---
-        particles.forEach((p, i) => {
-            p.x += p.vx;
-            p.y += p.vy;
-            p.life--;
-            let pScreenX = p.x - cameraX;
-            let pScreenY = floorY - p.y;
-            
-            ctx.fillStyle = p.color;
-            ctx.globalAlpha = p.life / 30;
-            ctx.fillRect(pScreenX, pScreenY, 8, 8);
-            ctx.globalAlpha = 1;
-
-            if(p.life <= 0) particles.splice(i, 1);
-        });
-
-        // --- EDITOR GRID ---
-        if (state === 'EDITOR') {
-            ctx.strokeStyle = 'rgba(255,255,255,0.2)';
-            ctx.lineWidth = 1;
-            let offX = -(cameraX % TILE_SIZE);
-            for(let x=offX; x<canvasWidth; x+=TILE_SIZE) {
-                ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvasHeight); ctx.stroke();
-            }
-            // Draw baseline
-            ctx.strokeStyle = '#00FF00';
-            ctx.beginPath(); ctx.moveTo(0, floorY); ctx.lineTo(canvasWidth, floorY); ctx.stroke();
-        }
-    }
-
-    // Input tracking for editor camera
-    let keys = {};
-    window.addEventListener('keydown', e => keys[e.code] = true);
-    window.addEventListener('keyup', e => keys[e.code] = false);
-
+    // --- GAME LOOP ---
     function loop() {
-        if(state === 'GAME') updatePhysics();
+        if(state === 'GAME') update();
         draw();
         frameId = requestAnimationFrame(loop);
     }
+
+    // --- LOGIC ---
+    function update() {
+        if(p.dead) return;
+
+        // Bewegung
+        p.x += SPEED;
+        camX = p.x - (w * 0.3); // Kamera folgt Spieler
+        if(camX < 0) camX = 0;
+
+        // Gravitation
+        p.dy += GRAVITY;
+        p.y += p.dy; // y ist hier Position von oben nach unten (Standard Canvas)
+
+        // Boden Kollision
+        let floorY = h - FLOOR_OFFSET - p.h;
+        if(p.y >= floorY) {
+            p.y = floorY;
+            p.dy = 0;
+            p.grounded = true;
+            p.rot = Math.round(p.rot / 90) * 90; // Rotation reset
+        } else {
+            p.grounded = false;
+            p.rot += 5;
+        }
+
+        // Block Kollisionen
+        checkCollisions();
+    }
+
+    function checkCollisions() {
+        // Optimierung: Nur Blöcke in der Nähe prüfen
+        let pRight = p.x + p.w;
+        let pBottom = p.y + p.h;
+        
+        // Kleine Hitbox-Verkleinerung (fairness)
+        let pad = 8; 
+
+        levelData.forEach(obj => {
+            let ox = obj.x * TILE;
+            let oy = h - FLOOR_OFFSET - (obj.y * TILE); // y konvertieren (Grid startet bei 1 über Boden)
+            
+            // Ist Objekt im Bild?
+            if(ox < p.x - 100 || ox > p.x + w) return;
+
+            // AABB Check
+            if (p.x + pad < ox + TILE - pad &&
+                pRight - pad > ox + pad &&
+                p.y + pad < oy + TILE &&
+                pBottom > oy) {
+                
+                if(obj.type === 2) { // SPIKE
+                    die();
+                } else if(obj.type === 1) { // BLOCK
+                    // Oben drauf landen?
+                    if(p.dy > 0 && p.y + p.h <= oy + p.dy + 5) { // Toleranz
+                        p.y = oy - p.h;
+                        p.dy = 0;
+                        p.grounded = true;
+                        p.rot = Math.round(p.rot / 90) * 90;
+                    } else {
+                        die(); // Gegen die Wand
+                    }
+                }
+            }
+        });
+    }
+
+    function die() {
+        p.dead = true;
+        if(audioExists) audio.pause();
+        // Kurzer Reset Timer
+        setTimeout(() => {
+            resetPlayer();
+            if(audioExists) { audio.currentTime = 0; audio.play(); }
+        }, 500);
+    }
+
+    function jump() {
+        if(state === 'GAME' && p.grounded && !p.dead) {
+            p.dy = JUMP;
+            p.grounded = false;
+        }
+    }
+
+    // --- DRAW ---
+    function draw() {
+        // Hintergrund
+        ctx.fillStyle = (state === 'EDITOR') ? '#111' : '#200122';
+        ctx.fillRect(0, 0, w, h);
+
+        let floorY = h - FLOOR_OFFSET;
+
+        // Boden
+        ctx.fillStyle = '#000';
+        ctx.fillRect(0, floorY, w, FLOOR_OFFSET);
+        ctx.strokeStyle = '#fff';
+        ctx.beginPath(); ctx.moveTo(0, floorY); ctx.lineTo(w, floorY); ctx.stroke();
+
+        // Kamera Shift
+        ctx.save();
+        ctx.translate(-camX, 0);
+
+        // Level Objekte zeichnen
+        let data = (state === 'EDITOR') ? editorData : levelData;
+        
+        data.forEach(obj => {
+            let x = obj.x * TILE;
+            let y = floorY - (obj.y * TILE);
+
+            if(obj.type === 1) { // Block
+                ctx.fillStyle = 'cyan';
+                ctx.fillRect(x, y, TILE, TILE);
+                ctx.strokeStyle = 'white';
+                ctx.strokeRect(x, y, TILE, TILE);
+            } else if(obj.type === 2) { // Spike
+                ctx.fillStyle = 'red';
+                ctx.beginPath();
+                ctx.moveTo(x, y + TILE);
+                ctx.lineTo(x + TILE/2, y);
+                ctx.lineTo(x + TILE, y + TILE);
+                ctx.fill();
+            }
+        });
+
+        // Spieler zeichnen
+        if(state === 'GAME' && !p.dead) {
+            ctx.translate(p.x + p.w/2, p.y + p.h/2);
+            ctx.rotate(p.rot * Math.PI / 180);
+            ctx.fillStyle = 'yellow';
+            ctx.fillRect(-p.w/2, -p.h/2, p.w, p.h);
+            ctx.strokeStyle = 'black';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(-p.w/2, -p.h/2, p.w, p.h);
+            ctx.restore(); // Undo Rotation
+        } else {
+             ctx.restore(); // Undo Camera Shift (für Editor Grid etc)
+        }
+        
+        // Editor Grid Overlay
+        if(state === 'EDITOR') {
+             ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+             ctx.beginPath();
+             // Vertikale Linien basierend auf CamX
+             let startGrid = Math.floor(camX / TILE) * TILE;
+             for(let gx = startGrid; gx < startGrid + w; gx+=TILE) {
+                 ctx.moveTo(gx - camX, 0); ctx.lineTo(gx - camX, h);
+             }
+             ctx.stroke();
+        }
+    }
+
+    // --- STEUERUNG & LEVEL ---
+    
+    // Einfaches Level Generieren
+    function generateLevel() {
+        let d = [];
+        // Boden Blocks und Spikes
+        for(let i=10; i<200; i++) {
+            if(Math.random() > 0.8) d.push({x: i, y: 1, type: 2}); // Spike
+            else if(Math.random() > 0.9) { // Block Platform
+                 d.push({x: i, y: 1, type: 1});
+                 d.push({x: i+1, y: 1, type: 1}); 
+            }
+        }
+        // Garantie: Start ist leer
+        d = d.filter(o => o.x > 15);
+        return d;
+    }
+
+    function startGame() {
+        levelData = (editorData.length > 0) ? editorData : generateLevel();
+        state = 'GAME';
+        document.getElementById('menu').classList.remove('active');
+        document.getElementById('editor-ui').style.display = 'none';
+        resetPlayer();
+        if(audioExists) {
+             audio.currentTime = 0; 
+             audio.play().catch(e => console.log("Audio Autoplay blocked"));
+        }
+        loop();
+    }
+
+    function resetPlayer() {
+        p.x = 0;
+        p.y = h - FLOOR_OFFSET - p.h;
+        p.dy = 0;
+        p.rot = 0;
+        p.dead = false;
+        p.grounded = true;
+        camX = 0;
+    }
+
+    // --- EDITOR ---
+    let currentTool = 1;
+    function openEditor() {
+        state = 'EDITOR';
+        document.getElementById('menu').classList.remove('active');
+        document.getElementById('editor-ui').style.display = 'flex';
+        camX = 0;
+        if(editorData.length === 0) editorData = [];
+        draw(); // Einmal zeichnen
+        loop(); // Loop starten
+    }
+
+    function setTool(t) {
+        currentTool = t;
+        document.querySelectorAll('.tool').forEach(e => e.classList.remove('selected'));
+        document.getElementById('t'+t).classList.add('selected');
+    }
+
+    function testLevel() {
+        levelData = JSON.parse(JSON.stringify(editorData));
+        state = 'GAME';
+        document.getElementById('editor-ui').style.display = 'none';
+        resetPlayer();
+    }
+    
+    function backToMenu() {
+        state = 'MENU';
+        document.getElementById('menu').classList.add('active');
+        document.getElementById('editor-ui').style.display = 'none';
+        if(audioExists) audio.pause();
+        cancelAnimationFrame(frameId);
+    }
+
+    // Inputs
+    window.addEventListener('keydown', e => {
+        if(e.code === 'Space' || e.code === 'ArrowUp') jump();
+        if(state === 'EDITOR') {
+            if(e.code === 'ArrowRight') camX += 20;
+            if(e.code === 'ArrowLeft') camX -= 20;
+            if(camX < 0) camX = 0;
+        }
+    });
+    window.addEventListener('mousedown', e => {
+        if(state === 'GAME') jump();
+        
+        if(state === 'EDITOR') {
+            // Editor Platzierung
+            let rect = canvas.getBoundingClientRect();
+            let mx = e.clientX - rect.left + camX;
+            let my = e.clientY - rect.top;
+            
+            let floorY = h - FLOOR_OFFSET;
+            let gy = Math.ceil((floorY - my) / TILE);
+            let gx = Math.floor(mx / TILE);
+
+            if(gy >= 1) { // Nicht unter Boden
+                // Erst löschen wenn vorhanden
+                editorData = editorData.filter(o => !(o.x === gx && o.y === gy));
+                // Dann setzen
+                if(currentTool > 0) {
+                    editorData.push({x: gx, y: gy, type: currentTool});
+                }
+            }
+        }
+    });
 
 </script>
 </body>
