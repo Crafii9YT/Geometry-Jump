@@ -2,15 +2,17 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>GeoDash Stable Version</title>
+    <title>GeoDash Stable Version - EASY MODE</title>
     <style>
+        /* (CSS bleibt gleich, nur der Hintergrund ändert sich, um anzuzeigen, dass es eine neue Version ist) */
         @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@900&display=swap');
         
         body { margin: 0; overflow: hidden; background: #000; font-family: 'Roboto', sans-serif; color: white; user-select: none; }
         
         #game-container {
             position: relative; width: 100vw; height: 100vh;
-            background: linear-gradient(to bottom, #200122, #6f0000);
+            /* Hintergrundfarbe, die Einfachheit signalisiert */
+            background: linear-gradient(to bottom, #1E90FF, #4682B4); 
             display: flex; justify-content: center; align-items: center;
         }
 
@@ -55,7 +57,7 @@
 
     <div id="menu" class="screen active">
         <h1>GEOMETRY DASH CLONE</h1>
-        <button class="btn-green" onclick="startGame()">▶ PLAY</button>
+        <button class="btn-green" onclick="startGame()">▶ PLAY (EASY MODE)</button>
         <button class="btn-orange" onclick="openEditor()">🛠 EDITOR</button>
         <p style="margin-top:20px; color:#aaa; font-size: 0.8rem;">(Audio requires 'stereomadness.mp3' in folder)</p>
     </div>
@@ -79,10 +81,10 @@
     let state = 'MENU'; // MENU, GAME, EDITOR
     let frameId;
     
-    // Physik Konstanten
-    const GRAVITY = 0.7;
-    const JUMP = -12;
-    const SPEED = 7;
+    // --- NEUE PHYSIK FÜR EASY MODE ---
+    const GRAVITY = 0.5; // Weniger Schwerkraft -> Flachere Kurven
+    const JUMP = -14;   // Höherer Sprung
+    const SPEED = 5;    // Langsamer
     const TILE = 50;
     const FLOOR_OFFSET = 100;
 
@@ -180,6 +182,7 @@
                     die();
                 } else if(obj.type === 1) { // BLOCK
                     // Oben drauf landen?
+                    // Check, ob der Spieler in der letzten Frame noch ÜBER dem Block war (p.dy > 0)
                     if(p.dy > 0 && p.y + p.h <= oy + p.dy + 5) { // Toleranz
                         p.y = oy - p.h;
                         p.dy = 0;
@@ -196,11 +199,11 @@
     function die() {
         p.dead = true;
         if(audioExists) audio.pause();
-        // Kurzer Reset Timer
+        // Reset Timer verlängert für bessere Reaktion
         setTimeout(() => {
             resetPlayer();
             if(audioExists) { audio.currentTime = 0; audio.play(); }
-        }, 500);
+        }, 1000); // 1 Sekunde Pause vor Reset
     }
 
     function jump() {
@@ -279,23 +282,41 @@
 
     // --- STEUERUNG & LEVEL ---
     
-    // Einfaches Level Generieren
+    // NEU: Einfacheres Level Generieren
     function generateLevel() {
         let d = [];
-        // Boden Blocks und Spikes
-        for(let i=10; i<200; i++) {
-            if(Math.random() > 0.8) d.push({x: i, y: 1, type: 2}); // Spike
-            else if(Math.random() > 0.9) { // Block Platform
-                 d.push({x: i, y: 1, type: 1});
-                 d.push({x: i+1, y: 1, type: 1}); 
+        // Längeres Start-Leerspiel (ca. 10 Einheiten)
+        let currentX = 20; 
+
+        while (currentX < 400) { // Level bis X=400 (sehr lang)
+            // Lücke generieren (20 bis 40 Einheiten Leerraum)
+            currentX += 20 + Math.floor(Math.random() * 20); 
+
+            // Hindernis generieren
+            let type = Math.random() > 0.5 ? 2 : 1; // 50% Spike, 50% Block
+            let height = 1 + Math.floor(Math.random() * 2); // Höhe 1 oder 2
+
+            if (type === 2) { // Spike (nur Höhe 1)
+                d.push({x: currentX, y: 1, type: 2});
+                currentX += 1;
+            } else { // Block
+                d.push({x: currentX, y: height, type: 1});
+                if(Math.random() > 0.5) { // Manchmal Doppelblock
+                   d.push({x: currentX + 1, y: height, type: 1});
+                   currentX += 2;
+                } else {
+                    currentX += 1;
+                }
             }
         }
-        // Garantie: Start ist leer
+        
+        // Start ist garantiert leer
         d = d.filter(o => o.x > 15);
         return d;
     }
 
     function startGame() {
+        // Wenn der Editor leer ist, generiere das einfache Level
         levelData = (editorData.length > 0) ? editorData : generateLevel();
         state = 'GAME';
         document.getElementById('menu').classList.remove('active');
@@ -309,6 +330,7 @@
     }
 
     function resetPlayer() {
+        // Reset-Position an den Anfang zurücksetzen
         p.x = 0;
         p.y = h - FLOOR_OFFSET - p.h;
         p.dy = 0;
@@ -326,8 +348,7 @@
         document.getElementById('editor-ui').style.display = 'flex';
         camX = 0;
         if(editorData.length === 0) editorData = [];
-        draw(); // Einmal zeichnen
-        loop(); // Loop starten
+        loop(); 
     }
 
     function setTool(t) {
