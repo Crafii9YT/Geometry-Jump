@@ -1,156 +1,552 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8" />
-  <title>BlockDash – Web Prototype</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <style>
-    * { box-sizing: border-box; font-family: Arial, sans-serif; }
-    body { margin:0; background:#0e0e14; color:white; overflow:hidden; }
-    button { cursor:pointer; border:none; border-radius:12px; }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GeoDash Clone Framework</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Pusab&family=Roboto:wght@700&display=swap');
 
-    /* ===== Screens ===== */
-    .screen { display:none; width:100vw; height:100vh; }
-    .active { display:flex; }
+        /* --- CSS STYLES --- */
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #1a1a1a;
+            font-family: 'Roboto', sans-serif; /* Fallback, GD nutzt Pusab */
+            color: white;
+            user-select: none;
+        }
 
-    /* ===== Main Menu ===== */
-    #menu { align-items:center; justify-content:center; flex-direction:column; gap:20px; }
-    #playBtn {
-      width:220px; height:220px; border-radius:50%;
-      background:linear-gradient(135deg,#00f2ff,#0066ff);
-      font-size:48px; color:white;
-    }
-    .sideBtns {
-      position:absolute; top:50%; transform:translateY(-50%);
-      display:flex; flex-direction:column; gap:12px;
-    }
-    #leftBtns { left:20px; }
-    #rightBtns { right:20px; }
-    .smallBtn { width:120px; height:40px; background:#1e1e2e; color:white; }
+        #game-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            background: linear-gradient(to bottom, #004488, #001133);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
 
-    /* ===== Level Select ===== */
-    #levels { flex-direction:column; align-items:center; padding-top:40px; gap:16px; }
-    .level {
-      width:320px; padding:16px; background:#1b1b2a;
-      border-radius:14px;
-    }
+        canvas {
+            display: block;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        }
 
-    /* ===== Game ===== */
-    #game { background:#111; }
-    canvas { background:#111; display:block; }
+        /* UI Overlay */
+        #ui-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none; /* Klicks gehen durch, außer auf Buttons */
+        }
 
-    /* ===== Settings ===== */
-    #settings { flex-direction:column; padding:40px; gap:20px; }
+        .screen {
+            display: none;
+            width: 100%;
+            height: 100%;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            pointer-events: auto;
+            background: rgba(0, 0, 0, 0.4);
+        }
 
-    /* ===== Editor (Prototype) ===== */
-    #editor { flex-direction:row; }
-    #editorTools {
-      width:200px; background:#161622; padding:10px;
-      display:flex; flex-direction:column; gap:10px;
-    }
-    #editorCanvas { flex:1; background:#0b0b10; }
-  </style>
+        .active {
+            display: flex;
+        }
+
+        h1, h2 {
+            text-shadow: 2px 2px 0px #000;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+        }
+
+        /* Buttons */
+        .btn {
+            border: 2px solid white;
+            padding: 15px 30px;
+            margin: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            text-transform: uppercase;
+            transition: transform 0.1s, box-shadow 0.1s;
+            box-shadow: 0 4px 0 #000;
+            text-align: center;
+        }
+
+        .btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 0 0 #000;
+        }
+
+        /* Main Menu Layout */
+        .main-menu-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .btn-play {
+            background: #00FF00;
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2rem;
+            grid-column: 2;
+        }
+
+        .btn-side {
+            width: 80px;
+            height: 80px;
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 0.8rem;
+        }
+        
+        .btn-editor { background: #FFAA00; grid-column: 3; }
+        .btn-icons { background: #00AAFF; grid-column: 1; }
+
+        /* Level Select */
+        .level-card {
+            background: #333;
+            border: 2px solid #555;
+            width: 60%;
+            padding: 20px;
+            margin: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .difficulty-easy { color: #00FF00; }
+        .difficulty-normal { color: #FFFF00; }
+
+        /* HUD */
+        #hud {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            width: calc(100% - 40px);
+            display: none;
+            pointer-events: none;
+        }
+
+        #progress-bar-container {
+            width: 100%;
+            height: 20px;
+            background: rgba(0,0,0,0.5);
+            border: 2px solid white;
+            margin-top: 10px;
+        }
+        
+        #progress-fill {
+            height: 100%;
+            background: #00FF00;
+            width: 0%;
+        }
+
+        /* Editor UI Placeholder */
+        .editor-toolbar {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            background: #222;
+            height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-top: 2px solid #555;
+        }
+
+        .locked { filter: grayscale(1); opacity: 0.5; cursor: not-allowed; }
+
+    </style>
 </head>
 <body>
 
-<!-- ===== MAIN MENU ===== -->
-<div id="menu" class="screen active">
-  <button id="playBtn">▶</button>
+<div id="game-container">
+    <canvas id="gameCanvas"></canvas>
 
-  <div id="leftBtns" class="sideBtns">
-    <button class="smallBtn" onclick="showIcons()">Icons</button>
-    <button class="smallBtn" onclick="showSettings()">Settings</button>
-  </div>
+    <div id="ui-layer">
+        
+        <div id="menu-main" class="screen active">
+            <h1 style="font-size: 3rem; color: #FFD700;">GEOMETRY CLONE</h1>
+            <div class="main-menu-grid">
+                <div class="btn btn-side btn-icons" onclick="showScreen('menu-icons')">Icons</div>
+                <div class="btn btn-play" onclick="showScreen('menu-levels')">▶</div>
+                <div class="btn btn-side btn-editor" onclick="showScreen('menu-editor')">Editor</div>
+            </div>
+            <div style="margin-top: 20px;">
+                <button class="btn" onclick="toggleSettings()">⚙ Settings</button>
+            </div>
+        </div>
 
-  <div id="rightBtns" class="sideBtns">
-    <button class="smallBtn" onclick="showEditor()">Editor</button>
-  </div>
-</div>
+        <div id="menu-levels" class="screen">
+            <h2>Select Level</h2>
+            <div id="level-list">
+                </div>
+            <button class="btn" onclick="showScreen('menu-main')" style="background: #FF4444;">Back</button>
+        </div>
 
-<!-- ===== LEVEL SELECT ===== -->
-<div id="levels" class="screen">
-  <h2>Level Auswahl</h2>
+        <div id="menu-editor" class="screen">
+            <h2>Level Editor</h2>
+            <p>Free Plan: 0 / 3 Levels Created</p>
+            <button class="btn" onclick="startEditor()">Create New Level</button>
+            <div style="margin-top: 20px; color: #aaa; font-size: 0.8rem;">
+                Advanced Triggers (Color, Move, Alpha) available inside.<br>
+                Limit: 999 Color Channels.
+            </div>
+            <button class="btn" onclick="showScreen('menu-main')" style="background: #FF4444; margin-top:20px;">Back</button>
+        </div>
 
-  <div class="level" onclick="startLevel(0)">
-    <b>Stereo Madness</b><br>
-    Länge: 1:00 – Easy
-  </div>
-  <div class="level" onclick="startLevel(1)">
-    <b>Back on Track</b><br>
-    Länge: 1:00 – Easy
-  </div>
-  <div class="level" onclick="startLevel(2)">
-    <b>Dry Out</b><br>
-    Länge: 1:15 – Normal
-  </div>
+        <div id="menu-icons" class="screen">
+            <h2>Garage / Icon Kit</h2>
+            <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                <button class="btn" style="background:#444;">Cube</button>
+                <button class="btn" style="background:#444;">Ship</button>
+                <button class="btn" style="background:#444;">UFO</button>
+                <button class="btn" style="background:#444;">Wave</button>
+            </div>
+            <div id="icon-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px;">
+                </div>
+            <div style="margin-top: 20px;">
+                Colors: <span style="color:cyan">Main</span> | <span style="color:lime">Secondary</span> | <span style="color:white; text-shadow: 0 0 5px white;">Glow</span>
+            </div>
+            <button class="btn" onclick="showScreen('menu-main')" style="background: #FF4444; margin-top:20px;">Back</button>
+        </div>
 
-  <button class="smallBtn" onclick="backToMenu()">Zurück</button>
-</div>
+        <div id="menu-settings" class="screen" style="background: rgba(0,0,0,0.9);">
+            <h2>Settings</h2>
+            <label>Music Volume: <input type="range"></label><br><br>
+            <label>SFX Volume: <input type="range"></label><br><br>
+            <label><input type="checkbox" checked> Show Progress Bar</label><br>
+            <label><input type="checkbox" checked> Show Percentage</label><br><br>
+            <button class="btn" onclick="showScreen('menu-main')">Close</button>
+        </div>
 
-<!-- ===== GAME ===== -->
-<div id="game" class="screen">
-  <canvas id="gameCanvas" width="900" height="400"></canvas>
-  <button class="smallBtn" style="position:absolute;top:20px;left:20px" onclick="backToMenu()">Exit</button>
-</div>
+        <div id="hud">
+            <div style="display:flex; justify-content:space-between;">
+                <button class="btn" style="padding: 5px 10px; font-size: 0.8rem;" onclick="pauseGame()">||</button>
+                <span id="percentage-text">0%</span>
+            </div>
+            <div id="progress-bar-container">
+                <div id="progress-fill"></div>
+            </div>
+        </div>
 
-<!-- ===== SETTINGS ===== -->
-<div id="settings" class="screen">
-  <h2>Einstellungen</h2>
-  Music Volume <input type="range" min="0" max="1" step="0.01" id="musicVol"><br>
-  SFX Volume <input type="range" min="0" max="1" step="0.01"><br>
-  Progress Bar <input type="checkbox" checked><br>
-  Prozentanzeige <input type="checkbox" checked><br>
-  <button class="smallBtn" onclick="backToMenu()">Zurück</button>
-</div>
-
-<!-- ===== EDITOR ===== -->
-<div id="editor" class="screen">
-  <div id="editorTools">
-    <b>Editor (Free Plan)</b>
-    <button class="smallBtn">Block</button>
-    <button class="smallBtn">Spike</button>
-    <button class="smallBtn">Move Trigger</button>
-    <button class="smallBtn">Color Trigger</button>
-    <button class="smallBtn">Playtest</button>
-    <small>Max. 3 Level</small>
-    <button class="smallBtn" onclick="backToMenu()">Exit</button>
-  </div>
-  <canvas id="editorCanvas" width="800" height="400"></canvas>
+    </div>
 </div>
 
 <script>
-  const screens = document.querySelectorAll('.screen');
-  function show(id){ screens.forEach(s=>s.classList.remove('active')); document.getElementById(id).classList.add('active'); }
-  function backToMenu(){ show('menu'); }
+    /** --- KONFIGURATION & DATEN --- */
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    
+    // Canvas Größe anpassen
+    function resize() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resize);
+    resize();
 
-  document.getElementById('playBtn').onclick = ()=>show('levels');
-  function showSettings(){ show('settings'); }
-  function showEditor(){ show('editor'); }
-  function showIcons(){ alert('Icon-Auswahl (Prototype)'); }
+    // Levels Daten
+    const levels = [
+        { 
+            name: "Stereo Madness", 
+            difficulty: "Easy", 
+            length: "1:00", 
+            songName: "Stereo Madness", 
+            youtube: "https://www.youtube.com/watch?v=JhKyKEDxo8Q",
+            color: "#00FF00" 
+        },
+        { 
+            name: "Back on Track", 
+            difficulty: "Easy", 
+            length: "1:00", 
+            songName: "Back on Track", 
+            youtube: "https://www.youtube.com/watch?v=N9vDTYZpqXM",
+            color: "#00FF00" 
+        },
+        { 
+            name: "Dry Out", 
+            difficulty: "Normal", 
+            length: "1:15", 
+            songName: "Dry Out", 
+            youtube: "https://www.youtube.com/watch?v=FnXabH2q2A0",
+            color: "#FFFF00" 
+        }
+    ];
 
-  /* ===== GAME LOGIC (Cube Prototype) ===== */
-  const canvas = document.getElementById('gameCanvas');
-  const ctx = canvas.getContext('2d');
-  let cube = { x:100, y:300, vy:0, size:30, onGround:true };
-  const gravity = 0.9;
+    // Spielzustand
+    let gameState = 'MENU'; // MENU, GAME, EDITOR
+    let gameRunning = false;
+    let frameCount = 0;
 
-  function startLevel(id){ show('game'); cube.y=300; loop(); }
+    // Player Physics (Vereinfacht für Cube)
+    const player = {
+        x: 200,
+        y: 0,
+        width: 40,
+        height: 40,
+        dy: 0,
+        jumpForce: -13,
+        gravity: 0.8,
+        grounded: false,
+        rotation: 0,
+        mode: 'CUBE', // CUBE, SHIP, UFO, WAVE, ROBOT
+        color1: '#00FFFF',
+        color2: '#FFFF00'
+    };
 
-  function loop(){
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-    cube.vy += gravity;
-    cube.y += cube.vy;
-    if(cube.y>300){ cube.y=300; cube.vy=0; cube.onGround=true; }
+    const floorHeight = 100;
+    
+    // Level Objekte (Nur Beispielblöcke)
+    let obstacles = [];
 
-    ctx.fillStyle='#00ffff';
-    ctx.fillRect(cube.x,cube.y,cube.size,cube.size);
+    /** --- UI LOGIK --- */
 
-    requestAnimationFrame(loop);
-  }
+    function showScreen(id) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        document.getElementById('hud').style.display = 'none';
+        gameRunning = false;
+    }
 
-  window.addEventListener('keydown',e=>{
-    if(e.code==='Space' && cube.onGround){ cube.vy=-14; cube.onGround=false; }
-  });
+    function toggleSettings() {
+        showScreen('menu-settings');
+    }
+
+    // Level Liste generieren
+    const levelListEl = document.getElementById('level-list');
+    levels.forEach((lvl, index) => {
+        let div = document.createElement('div');
+        div.className = 'level-card';
+        div.innerHTML = `
+            <div>
+                <h3 style="margin:0">${lvl.name}</h3>
+                <small>Song: ${lvl.songName} (${lvl.length})</small>
+            </div>
+            <div style="text-align:right">
+                <div class="difficulty-${lvl.difficulty.toLowerCase()}">${lvl.difficulty}</div>
+                <button class="btn" style="background:#00AA00; margin-top:5px; padding: 5px 15px;" onclick="startGame(${index})">PLAY</button>
+            </div>
+        `;
+        levelListEl.appendChild(div);
+    });
+
+    // Icon Grid generieren (Mockup)
+    const iconGrid = document.getElementById('icon-grid');
+    for(let i=1; i<=15; i++) {
+        let div = document.createElement('div');
+        div.style.width = '50px';
+        div.style.height = '50px';
+        div.style.background = i <= 5 ? '#222' : '#111'; // Erste 5 Free, Rest gesperrt visualisieren
+        div.style.border = i <= 5 ? '2px solid #555' : '2px solid #333';
+        div.innerText = i;
+        div.style.display = 'flex';
+        div.style.justifyContent = 'center';
+        div.style.alignItems = 'center';
+        if(i > 5) div.className = 'locked';
+        iconGrid.appendChild(div);
+    }
+
+    /** --- GAME ENGINE --- */
+
+    function startGame(levelIndex) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById('hud').style.display = 'block';
+        
+        // Reset Player
+        player.y = canvas.height - floorHeight - player.height;
+        player.dy = 0;
+        player.rotation = 0;
+        
+        // Level Generierung (Mockup: Generiert zufällige Blöcke)
+        obstacles = [];
+        for(let i=0; i<50; i++) {
+            obstacles.push({
+                x: 800 + (i * 400),
+                y: canvas.height - floorHeight - 40,
+                w: 40,
+                h: 40,
+                type: 'spike' // oder block
+            });
+        }
+
+        gameState = 'GAME';
+        gameRunning = true;
+        
+        console.log("Playing Song from: " + levels[levelIndex].youtube);
+        alert("Hinweis: Da YouTube-Audio nicht direkt eingebunden werden kann, stell dir bitte die Musik vor oder öffne den Link im Hintergrund! :)");
+
+        loop();
+    }
+
+    function startEditor() {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        gameState = 'EDITOR';
+        gameRunning = true;
+        // Editor Logik ist sehr komplex, hier wird nur ein Grid gerendert
+        loop();
+    }
+
+    function pauseGame() {
+        gameRunning = false;
+        showScreen('menu-levels');
+    }
+
+    // Input Handling
+    window.addEventListener('keydown', (e) => {
+        if(e.code === 'Space' || e.code === 'ArrowUp') {
+            if(gameState === 'GAME' && player.grounded) {
+                player.dy = player.jumpForce;
+                player.grounded = false;
+                // Partikel Effekt hier einfügen
+            }
+        }
+    });
+    
+    window.addEventListener('mousedown', () => {
+        if(gameState === 'GAME' && player.grounded) {
+            player.dy = player.jumpForce;
+            player.grounded = false;
+        }
+    });
+
+    function update() {
+        if(gameState !== 'GAME') return;
+
+        // Gravity
+        player.dy += player.gravity;
+        player.y += player.dy;
+
+        // Floor Collision
+        if (player.y + player.height > canvas.height - floorHeight) {
+            player.y = canvas.height - floorHeight - player.height;
+            player.dy = 0;
+            player.grounded = true;
+            
+            // Rotation reset am Boden (vereinfacht)
+            player.rotation = Math.round(player.rotation / 90) * 90;
+        } else {
+            player.grounded = false;
+            player.rotation += 5; // Rotation in der Luft
+        }
+
+        // Obstacle Movement & Collision
+        obstacles.forEach(obs => {
+            obs.x -= 6; // Speed
+
+            // Simple AABB Collision
+            if (player.x < obs.x + obs.w &&
+                player.x + player.width > obs.x &&
+                player.y < obs.y + obs.h &&
+                player.y + player.height > obs.y) {
+                    
+                // Death Logic
+                death();
+            }
+        });
+
+        // Progress Update
+        let progress = (frameCount % 1000) / 10; // Fake progress
+        document.getElementById('progress-fill').style.width = progress + "%";
+        document.getElementById('percentage-text').innerText = Math.floor(progress) + "%";
+        
+        frameCount++;
+    }
+
+    function death() {
+        // Simple Reset
+        player.x = 200; // Eigentlich Level neustarten
+        obstacles.forEach((o, i) => o.x = 800 + (i * 400));
+        // Blitz effekt oder Partikel hier
+    }
+
+    function draw() {
+        // Clear Screen
+        ctx.fillStyle = gameState === 'EDITOR' ? '#222' : '#004488';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Floor
+        ctx.fillStyle = '#000';
+        ctx.fillRect(0, canvas.height - floorHeight, canvas.width, floorHeight);
+        ctx.strokeStyle = '#FFF';
+        ctx.beginPath();
+        ctx.moveTo(0, canvas.height - floorHeight);
+        ctx.lineTo(canvas.width, canvas.height - floorHeight);
+        ctx.stroke();
+
+        if (gameState === 'GAME') {
+            // Draw Player
+            ctx.save();
+            ctx.translate(player.x + player.width/2, player.y + player.height/2);
+            ctx.rotate(player.rotation * Math.PI / 180);
+            
+            // Main Color
+            ctx.fillStyle = player.color1;
+            ctx.fillRect(-player.width/2, -player.height/2, player.width, player.height);
+            
+            // Secondary Color (Mini square inside)
+            ctx.fillStyle = player.color2;
+            ctx.fillRect(-player.width/4, -player.height/4, player.width/2, player.height/2);
+            
+            // Border
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(-player.width/2, -player.height/2, player.width, player.height);
+            
+            ctx.restore();
+
+            // Draw Obstacles
+            ctx.fillStyle = '#FF0000'; // Spikes or Blocks
+            obstacles.forEach(obs => {
+                if(obs.type === 'spike') {
+                    // Draw Triangle for spike
+                    ctx.beginPath();
+                    ctx.moveTo(obs.x, obs.y + obs.h);
+                    ctx.lineTo(obs.x + obs.w/2, obs.y);
+                    ctx.lineTo(obs.x + obs.w, obs.y + obs.h);
+                    ctx.fill();
+                    ctx.stroke();
+                } else {
+                    ctx.fillRect(obs.x, obs.y, obs.w, obs.h);
+                }
+            });
+        } else if (gameState === 'EDITOR') {
+            // Editor Grid
+            ctx.strokeStyle = '#444';
+            ctx.lineWidth = 1;
+            for(let x=0; x<canvas.width; x+=40) {
+                ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x, canvas.height); ctx.stroke();
+            }
+            for(let y=0; y<canvas.height; y+=40) {
+                ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(canvas.width, y); ctx.stroke();
+            }
+            
+            ctx.fillStyle = 'white';
+            ctx.font = '20px Arial';
+            ctx.fillText("EDITOR MODE - [PLACEHOLDER]", 50, 50);
+            ctx.fillText("Tools: Build | Edit | Delete | Swipe", 50, 80);
+        }
+    }
+
+    function loop() {
+        if(!gameRunning) return;
+        update();
+        draw();
+        requestAnimationFrame(loop);
+    }
+
 </script>
 </body>
 </html>
