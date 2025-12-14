@@ -1,2 +1,1 @@
-# Geometry-Jump
-Geometry Jump
+# Geometry Jump
