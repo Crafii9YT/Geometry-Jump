@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <title>BlockDash – Web Prototype</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    * { box-sizing: border-box; font-family: Arial, sans-serif; }
+    body { margin:0; background:#0e0e14; color:white; overflow:hidden; }
+    button { cursor:pointer; border:none; border-radius:12px; }
+
+    /* ===== Screens ===== */
+    .screen { display:none; width:100vw; height:100vh; }
+    .active { display:flex; }
+
+    /* ===== Main Menu ===== */
+    #menu { align-items:center; justify-content:center; flex-direction:column; gap:20px; }
+    #playBtn {
+      width:220px; height:220px; border-radius:50%;
+      background:linear-gradient(135deg,#00f2ff,#0066ff);
+      font-size:48px; color:white;
+    }
+    .sideBtns {
+      position:absolute; top:50%; transform:translateY(-50%);
+      display:flex; flex-direction:column; gap:12px;
+    }
+    #leftBtns { left:20px; }
+    #rightBtns { right:20px; }
+    .smallBtn { width:120px; height:40px; background:#1e1e2e; color:white; }
+
+    /* ===== Level Select ===== */
+    #levels { flex-direction:column; align-items:center; padding-top:40px; gap:16px; }
+    .level {
+      width:320px; padding:16px; background:#1b1b2a;
+      border-radius:14px;
+    }
+
+    /* ===== Game ===== */
+    #game { background:#111; }
+    canvas { background:#111; display:block; }
+
+    /* ===== Settings ===== */
+    #settings { flex-direction:column; padding:40px; gap:20px; }
+
+    /* ===== Editor (Prototype) ===== */
+    #editor { flex-direction:row; }
+    #editorTools {
+      width:200px; background:#161622; padding:10px;
+      display:flex; flex-direction:column; gap:10px;
+    }
+    #editorCanvas { flex:1; background:#0b0b10; }
+  </style>
+</head>
+<body>
+
+<!-- ===== MAIN MENU ===== -->
+<div id="menu" class="screen active">
+  <button id="playBtn">▶</button>
+
+  <div id="leftBtns" class="sideBtns">
+    <button class="smallBtn" onclick="showIcons()">Icons</button>
+    <button class="smallBtn" onclick="showSettings()">Settings</button>
+  </div>
+
+  <div id="rightBtns" class="sideBtns">
+    <button class="smallBtn" onclick="showEditor()">Editor</button>
+  </div>
+</div>
+
+<!-- ===== LEVEL SELECT ===== -->
+<div id="levels" class="screen">
+  <h2>Level Auswahl</h2>
+
+  <div class="level" onclick="startLevel(0)">
+    <b>Stereo Madness</b><br>
+    Länge: 1:00 – Easy
+  </div>
+  <div class="level" onclick="startLevel(1)">
+    <b>Back on Track</b><br>
+    Länge: 1:00 – Easy
+  </div>
+  <div class="level" onclick="startLevel(2)">
+    <b>Dry Out</b><br>
+    Länge: 1:15 – Normal
+  </div>
+
+  <button class="smallBtn" onclick="backToMenu()">Zurück</button>
+</div>
+
+<!-- ===== GAME ===== -->
+<div id="game" class="screen">
+  <canvas id="gameCanvas" width="900" height="400"></canvas>
+  <button class="smallBtn" style="position:absolute;top:20px;left:20px" onclick="backToMenu()">Exit</button>
+</div>
+
+<!-- ===== SETTINGS ===== -->
+<div id="settings" class="screen">
+  <h2>Einstellungen</h2>
+  Music Volume <input type="range" min="0" max="1" step="0.01" id="musicVol"><br>
+  SFX Volume <input type="range" min="0" max="1" step="0.01"><br>
+  Progress Bar <input type="checkbox" checked><br>
+  Prozentanzeige <input type="checkbox" checked><br>
+  <button class="smallBtn" onclick="backToMenu()">Zurück</button>
+</div>
+
+<!-- ===== EDITOR ===== -->
+<div id="editor" class="screen">
+  <div id="editorTools">
+    <b>Editor (Free Plan)</b>
+    <button class="smallBtn">Block</button>
+    <button class="smallBtn">Spike</button>
+    <button class="smallBtn">Move Trigger</button>
+    <button class="smallBtn">Color Trigger</button>
+    <button class="smallBtn">Playtest</button>
+    <small>Max. 3 Level</small>
+    <button class="smallBtn" onclick="backToMenu()">Exit</button>
+  </div>
+  <canvas id="editorCanvas" width="800" height="400"></canvas>
+</div>
+
+<script>
+  const screens = document.querySelectorAll('.screen');
+  function show(id){ screens.forEach(s=>s.classList.remove('active')); document.getElementById(id).classList.add('active'); }
+  function backToMenu(){ show('menu'); }
+
+  document.getElementById('playBtn').onclick = ()=>show('levels');
+  function showSettings(){ show('settings'); }
+  function showEditor(){ show('editor'); }
+  function showIcons(){ alert('Icon-Auswahl (Prototype)'); }
+
+  /* ===== GAME LOGIC (Cube Prototype) ===== */
+  const canvas = document.getElementById('gameCanvas');
+  const ctx = canvas.getContext('2d');
+  let cube = { x:100, y:300, vy:0, size:30, onGround:true };
+  const gravity = 0.9;
+
+  function startLevel(id){ show('game'); cube.y=300; loop(); }
+
+  function loop(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    cube.vy += gravity;
+    cube.y += cube.vy;
+    if(cube.y>300){ cube.y=300; cube.vy=0; cube.onGround=true; }
+
+    ctx.fillStyle='#00ffff';
+    ctx.fillRect(cube.x,cube.y,cube.size,cube.size);
+
+    requestAnimationFrame(loop);
+  }
+
+  window.addEventListener('keydown',e=>{
+    if(e.code==='Space' && cube.onGround){ cube.vy=-14; cube.onGround=false; }
+  });
+</script>
+</body>
+</html>
